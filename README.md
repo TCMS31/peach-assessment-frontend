@@ -20,20 +20,42 @@ this is an Expo **bare** project rather than a managed one.
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | ![Seven category tiles built from GET /categories](docs/screenshots/03-category-picker.png) | ![The same dashboard with Travel now the largest slice](docs/screenshots/04-after-assign.png) |
 
-Captured at 1440×900 against the backend's own seed data — the categories and
-merchants from its `db/seeds.rb`, the ten rows from its `transactions.csv`.
+Captured with Playwright at 1440×900 against the backend's own seed data — the
+categories and merchants from its `db/seeds.rb`, the ten rows from its
+`transactions.csv`. The same four screens at phone width (390×844):
+[dashboard](docs/screenshots/01-spending-dashboard-mobile.png),
+[review](docs/screenshots/02-review-transaction-mobile.png),
+[picker](docs/screenshots/03-category-picker-mobile.png),
+[after](docs/screenshots/04-after-assign-mobile.png).
 
 The **first and last** shots are a before/after pair from a single run. "SFO to JFK"
-($129.97) starts filed under **Shops**. Reassigning it to **Travel** takes Travel
-from $45.12 / 10% to $175.09 / 38%, and the total stays at $466.41 because nothing
-was spent, only relabelled. Every figure on that screen is derived from the API
-response — there is no placeholder data anywhere in the render path.
+($129.97) starts filed under **Shops**. Picking **Travel** returns to the review card,
+now showing Travel, and **Mark as reviewed** goes back to the dashboard: Travel moves
+from $45.12 / 10% to $175.09 / 38%, the queue drops from three to two, and the total
+stays at $466.41 because nothing was spent, only relabelled. Every figure on that
+screen is derived from the API response — there is no placeholder data anywhere in
+the render path.
 
 Note the `Taxes` tile in the third shot: the backend seeds that category and ships
 no artwork for it, so it renders from the emoji the API sends. That is
 [the extension seam](#choices-worth-defending) doing its job.
 
 ## Getting it on screen
+
+### One command: Docker Compose
+
+```bash
+docker compose up --build
+```
+
+That builds the web target into an nginx image and starts the stub API beside it.
+Open <http://localhost:8860>; the API answers on <http://localhost:8861>. The
+browser calls the API directly, so `PEACH_API_URL` is baked into the bundle at
+build time (see `docker-compose.yml`). Stop it with `docker compose down`.
+
+### Local development
+
+Node 22 (see `.nvmrc`) and Yarn 1.
 
 ```bash
 yarn install
@@ -43,7 +65,7 @@ Then a backend, either the real one or the stand-in:
 
 ```bash
 # A — no Ruby, no Postgres. Stub server, seeded from the backend's own fixtures.
-node scripts/mock-api.js --port 3000
+node scripts/mock-api.js            # http://localhost:3000
 
 # B — the real API, in the sibling repo.
 #   bin/setup && bin/rails s        # http://localhost:3000
@@ -65,7 +87,9 @@ screenshotted without provisioning a database. The Rails app is the contract.
 
 `useReviewTransaction` owns one `PATCH /transactions/:id` and exposes an explicit
 status, so the screen can tell "saving" from "saved" from "failed" instead of
-assuming the write worked.
+assuming the write worked. The review card and the category picker are both
+mounted while the picker is open, so each hook only reacts to the request it sent:
+saving a category closes the picker and leaves the card open to be marked reviewed.
 
 ```mermaid
 stateDiagram-v2
@@ -90,6 +114,38 @@ nested shape the Rails controller permits:
 `{transaction: {category_attributes: {name, emoji}}}`. The integration test runs the
 real `createHttpClient`, the real endpoint map, the real Reflux actions and the real
 screens against a stubbed transport, and asserts the exact URL and the exact body.
+
+What that looks like on the wire, captured from `scripts/mock-api.js`:
+
+```http
+PATCH /transactions/2
+Content-Type: application/json
+
+{"transaction":{"category_attributes":{"name":"Travel","emoji":"✈️"}}}
+```
+
+```json
+{
+  "id": 2,
+  "name": "SFO to JFK",
+  "date": "2023-05-29",
+  "amount": "129.97",
+  "reviewed": false,
+  "merchant": { "id": 2, "name": "United" },
+  "category": { "id": 6, "name": "Travel", "emoji": "✈️", "color": "#FFECC6", "budget": null }
+}
+```
+
+A category the backend does not know is a 422, and the picker shows the server's
+own words ("Category is not valid (HTTP 422)") rather than a status line:
+
+```http
+PATCH /transactions/2
+{"transaction":{"category_attributes":{"name":"Groceries"}}}
+
+HTTP/1.1 422
+{"message":["Category is not valid"]}
+```
 
 ## Where the numbers come from
 
@@ -116,7 +172,7 @@ disagree.
 | Variable        | Default                                                       | What it is for                                                                                              |
 | --------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `PEACH_API_URL` | `http://localhost:3000`, or `http://10.0.2.2:3000` on Android | Base URL of the Rails API. Read in `app.config.js`, surfaced as `expo.extra.apiBaseUrl`. No trailing slash. |
-| `PORT`          | `3000`                                                        | Port for `scripts/mock-api.js`. Also accepted as `--port`.                                                  |
+| `PORT`          | `3000`                                                        | Port for `scripts/mock-api.js`. A `--port` flag takes precedence.                                           |
 
 Copy `.env.example` if you want somewhere to keep it. The Android default is not
 cosmetic: an emulator cannot reach `localhost`, because that name resolves to the
@@ -155,12 +211,12 @@ src/
   screens/                One directory per route
   ui/                     theme.js tokens and presentational components
   test-support/           Payloads shaped like real API responses
-scripts/mock-api.js       Stand-in for the Rails API
+scripts/mock-api.js       Stand-in for the Rails API (its contract is tested too)
 ```
 
 Dependencies point inward. Screens read hooks, hooks read the store, the store
 reads the domain, and nothing below `src/api` knows that HTTP exists. That is why
-95 of the 125 tests need no renderer at all — they are function calls.
+most of the tests need no renderer at all — they are function calls.
 
 ## Choices worth defending
 
@@ -192,12 +248,19 @@ serialising the whole payload three times on the JS thread.
 **The offline cache is advisory.** Hydration from AsyncStorage is asynchronous and
 only fills slices the network has not already answered, so a slow disk read cannot
 clobber a fresh response. A corrupt or unreadable cache is swallowed — it is a
-convenience, not a source of truth.
+convenience, not a source of truth. A refresh keeps whatever is already on screen,
+and if it fails the dashboard says so above the chart instead of quietly showing
+stale numbers.
+
+**A peach palette with AA contrast.** Category colours come straight from the
+backend seeds; the chrome around them is warm peach on slate, and every text colour
+clears 4.5:1 on both the card and page backgrounds. The donut is colour only, so it
+carries a spoken summary of its slices for screen readers.
 
 ## Checks
 
 ```bash
-yarn test              # 13 suites, 125 tests
+yarn test              # 14 suites, 152 tests
 yarn test:coverage
 yarn lint              # eslint, --max-warnings=0
 yarn format:check
@@ -215,9 +278,6 @@ mock fails loudly instead of hanging or quietly reaching a real server.
 - **Only two of the four server-side filters are wired.** `peachApi` sends
   `pending_review` and `reviewed`. The backend also filters on `category_id` and
   `merchant_id`.
-- **Validation messages are not surfaced.** A 422 carries `{"message": [...]}`, but
-  `httpClient` raises from the status line alone, so the user sees "failed with HTTP
-  422" rather than what was wrong.
 - **No authentication.** The API has none, so neither does the client — no user, no
   session, no per-user data.
 - **No write queue.** A failed PATCH is reported and the screen stays put. No retry,
@@ -231,3 +291,19 @@ mock fails loudly instead of hanging or quietly reaching a real server.
   run and reviewed without Xcode or the Android SDK. The content column is capped
   and centred and that is the whole of the desktop story. The Docker image builds
   that web target only — a container cannot produce an iOS or Android binary.
+- **Expo SDK 48 is out of support.** Moving to a current SDK means React Native
+  0.7x → 0.8x, React 19, React Navigation 7 and regenerated `android/` and `ios/`
+  folders, which cannot be built or checked without Xcode and the Android SDK.
+  Until then `yarn audit` still reports 2 critical and 20 high advisories, all in
+  development tooling: node-tar inside `@expo/cli` (template extraction), metro's
+  `image-size`, webpack-dev-server's `webpack-dev-middleware` (`yarn web` only), and
+  `decode-uri-component` under React Navigation's deep-link parser. The rest were
+  patched in place through `resolutions` in `package.json`. The same upgrade is what
+  Google Play's API-level-34 requirement needs (SDK 50 or later).
+- **Web stays on webpack.** SDK 48 can bundle web with Metro, and it renders the
+  same app, but it does not embed the app config, so `PEACH_API_URL` would be
+  silently ignored in the built bundle.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
