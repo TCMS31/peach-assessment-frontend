@@ -3,19 +3,40 @@ export const DEFAULT_TIMEOUT_MS = 10_000;
 
 /** Everything thrown by the HTTP layer is normalised to this type. */
 export class HttpError extends Error {
-  constructor(message, { status = null, url = null, kind = 'http', cause = null } = {}) {
+  constructor(
+    message,
+    { status = null, url = null, kind = 'http', cause = null, details = [] } = {},
+  ) {
     super(message);
     this.name = 'HttpError';
     this.status = status;
     this.url = url;
     this.kind = kind;
     this.cause = cause;
+    this.details = details;
   }
 
   /** True for failures a retry might fix (offline, timeout, 5xx). */
   get isRetryable() {
     return this.kind !== 'http' || (this.status !== null && this.status >= 500);
   }
+}
+
+/**
+ * Rails answers a failed validation with `{"message": ["Category is not valid"]}`.
+ * Those strings are what the user needs to see, so they are pulled out of any
+ * error body that has them. A body that isn't JSON simply has no details.
+ */
+export async function readErrorDetails(response) {
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    return [];
+  }
+  const raw = body?.message ?? body?.errors ?? body?.error;
+  const list = Array.isArray(raw) ? raw : [raw];
+  return list.filter((item) => typeof item === 'string' && item.trim() !== '');
 }
 
 export function joinUrl(baseUrl, path) {
@@ -78,11 +99,12 @@ export function createHttpClient({
     }
 
     if (!response.ok) {
-      throw new HttpError(`${method} ${url} failed with HTTP ${response.status}`, {
-        status: response.status,
-        url,
-        kind: 'http',
-      });
+      const details = await readErrorDetails(response);
+      const message =
+        details.length > 0
+          ? `${details.join('. ')} (HTTP ${response.status})`
+          : `${method} ${url} failed with HTTP ${response.status}`;
+      throw new HttpError(message, { status: response.status, url, kind: 'http', details });
     }
 
     if (response.status === 204) {

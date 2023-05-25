@@ -68,6 +68,34 @@ describe('createHttpClient', () => {
     expect(error.isRetryable).toBe(false);
   });
 
+  it('surfaces the validation messages Rails sends with a 422', async () => {
+    const fetchImpl = jest.fn(async () => ({
+      ok: false,
+      status: 422,
+      json: async () => ({ message: ['Category is not valid', 'Name is too long'] }),
+    }));
+    const error = await createHttpClient({ baseUrl, fetchImpl })
+      .patch('/transactions/2', {})
+      .catch((e) => e);
+    expect(error.details).toEqual(['Category is not valid', 'Name is too long']);
+    expect(error.message).toBe('Category is not valid. Name is too long (HTTP 422)');
+  });
+
+  it('falls back to the status line when the error body is not JSON', async () => {
+    const fetchImpl = jest.fn(async () => ({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      },
+    }));
+    const error = await createHttpClient({ baseUrl, fetchImpl })
+      .get('/x')
+      .catch((e) => e);
+    expect(error.details).toEqual([]);
+    expect(error.message).toBe('GET http://localhost:3000/x failed with HTTP 502');
+  });
+
   it('marks a 5xx as retryable', async () => {
     const fetchImpl = jest.fn(async () => ({ ok: false, status: 503, json: async () => ({}) }));
     const error = await createHttpClient({ baseUrl, fetchImpl })

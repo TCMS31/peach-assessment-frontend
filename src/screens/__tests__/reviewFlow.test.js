@@ -173,6 +173,25 @@ describe('review flow', () => {
     expect(screen.getByTestId('category-tile-Taxes')).toBeOnTheScreen();
   });
 
+  it('shows the server validation message when a category is rejected', async () => {
+    stubNetwork({
+      '/transactions/2': { status: 422, body: { message: ['Category is not valid'] } },
+    });
+    await loadStore();
+    mockRouteParams = { transactionId: 2 };
+    render(<CategoryPickerScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('category-tile-Taxes'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(screen.getByTestId('category-picker-error')).toHaveTextContent(
+      'Category is not valid (HTTP 422)',
+    );
+    expect(mockNavigation.goBack).not.toHaveBeenCalled();
+  });
+
   it('assigns the chosen category through the nested Rails payload', async () => {
     const fetchImpl = stubNetwork();
     await loadStore();
