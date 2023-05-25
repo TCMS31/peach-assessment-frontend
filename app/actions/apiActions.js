@@ -30,16 +30,17 @@ const apiActions = Reflux.createActions({
 });
 
 /**
- * The original code called `completed({ data: error, loadFail: true })` on
- * failure, so the error object was written into the store as if it were data
- * and then persisted to AsyncStorage. Failures now go to `.failed`.
+ * Failures go to `.failed`, never into `.completed` as data, so an error object
+ * can't be stored and persisted as if the server had sent it. Both outcomes
+ * carry the original call arguments after the result, which lets a caller tell
+ * its own request apart from someone else's.
  */
 function wire(action, run) {
   action.listen(async (...args) => {
     try {
-      action.completed(await run(...args));
+      action.completed(await run(...args), ...args);
     } catch (error) {
-      action.failed(error);
+      action.failed(error, ...args);
     }
   });
 }

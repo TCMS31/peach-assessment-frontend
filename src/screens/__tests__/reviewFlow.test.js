@@ -207,6 +207,56 @@ describe('review flow', () => {
     expect(screen.getByTestId('spending-total')).toHaveTextContent('$256.36');
     expect(apiStore.getCurrentState().transactions.status).toBe('loading');
   });
+
+  it('leaves the review card open, on the new category, after the picker saves', async () => {
+    stubNetwork({
+      '/transactions/2': {
+        body: { ...transactionsPayload[1], category: categoriesPayload[1] },
+      },
+    });
+    await loadStore();
+    mockRouteParams = { transactionId: 2 };
+    // Both routes are mounted while the picker is open: the picker sits on top
+    // of the review card in the same modal stack.
+    render(
+      <>
+        <ReviewTransactionScreen />
+        <CategoryPickerScreen />
+      </>,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('category-tile-Food and Drink'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // Only the picker closes; the review card stays so it can be marked reviewed.
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('review-category')).toHaveTextContent(/Food and Drink/);
+    expect(screen.getByTestId('review-submit')).toBeEnabled();
+  });
+
+  it('shows a failed category save only on the picker that sent it', async () => {
+    stubNetwork({ '/transactions/2': { status: 422, body: {} } });
+    await loadStore();
+    mockRouteParams = { transactionId: 2 };
+    render(
+      <>
+        <ReviewTransactionScreen />
+        <CategoryPickerScreen />
+      </>,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('category-tile-Travel'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(screen.getByTestId('category-picker-error')).toHaveTextContent(/HTTP 422/);
+    expect(screen.queryByTestId('review-error')).toBeNull();
+    expect(mockNavigation.goBack).not.toHaveBeenCalled();
+  });
 });
 
 describe('combineStatus', () => {
