@@ -1,0 +1,28 @@
+# Dependencies and build output are produced inside the image.
+node_modules
+web-build
+dist
+coverage
+.expo
+.expo-shared
+
+# Native projects are built by Xcode/Gradle, never inside this image.
+android
+ios
+
+# VCS, editors, local config
+.git
+.gitignore
+.gitattributes
+.github
+.idea
+.vscode
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Docs and screenshots add megabytes and nothing else.
+docs
+README.md
