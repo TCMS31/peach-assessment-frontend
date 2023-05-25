@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   tileSelected: {
-    borderColor: colors.accent,
+    borderColor: colors.peach,
     borderWidth: 2,
   },
   tilePressed: {

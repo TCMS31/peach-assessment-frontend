@@ -23,7 +23,7 @@ export default function ReviewBanner({ count, onPress }) {
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
     >
       <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
+        colors={[colors.bannerStart, colors.bannerEnd]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradient}

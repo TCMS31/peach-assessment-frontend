@@ -227,6 +227,22 @@ describe('review flow', () => {
     expect(apiStore.getCurrentState().transactions.status).toBe('loading');
   });
 
+  it('keeps cached data on screen and says so when a refresh fails', async () => {
+    stubNetwork();
+    await loadStore();
+    render(<HomeScreen />);
+    expect(screen.queryByTestId('refresh-error')).toBeNull();
+
+    stubNetwork({ '/transactions': { status: 503, body: {} } });
+    await act(async () => {
+      refresh();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(screen.getByTestId('refresh-error')).toHaveTextContent(/HTTP 503/);
+    expect(screen.getByTestId('spending-total')).toHaveTextContent('$256.36');
+  });
+
   it('leaves the review card open, on the new category, after the picker saves', async () => {
     stubNetwork({
       '/transactions/2': {

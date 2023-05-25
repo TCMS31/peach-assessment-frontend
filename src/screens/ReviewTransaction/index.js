@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   change: {
     ...typography.caption,
-    color: colors.focusRing,
+    color: colors.link,
   },
   error: {
     ...typography.caption,

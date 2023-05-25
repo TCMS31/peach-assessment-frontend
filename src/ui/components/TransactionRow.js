@@ -10,7 +10,7 @@ export const ROW_HEIGHT = 68;
 
 export default function TransactionRow({ transaction, onPress }) {
   const isIncome = transaction.category?.name === INCOME_CATEGORY;
-  const accent = transaction.reviewed ? colors.positive : colors.gradientStart;
+  const accent = transaction.reviewed ? colors.positive : colors.peach;
 
   return (
     <Pressable

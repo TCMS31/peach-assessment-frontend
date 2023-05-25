@@ -1,25 +1,29 @@
 /**
  * Design tokens. Every colour, space and text style in the app comes from here
  * so a change is made once rather than hunted through inline style objects.
- * Palette is lifted from the backend seed data so chart slices and category
- * chips agree with the server's own colours.
+ *
+ * Category colours come from the backend seed data, so chart slices and
+ * category chips agree with the server. The chrome around them is a warm
+ * peach-on-slate scheme. Every text colour clears WCAG AA (4.5:1) on both
+ * `surface` and `background`.
  */
 export const colors = {
-  background: '#F7F8FA',
+  background: '#FAF7F4',
   surface: '#FFFFFF',
-  border: '#E6EBF0',
-  borderStrong: '#D3DBE4',
+  border: '#ECE6E1',
+  borderStrong: '#DCD3CC',
   textPrimary: '#1B2230',
-  textSecondary: '#6C727C',
-  textMuted: '#949CA8',
+  textSecondary: '#656D7A',
+  textMuted: '#656D7A',
   textInverse: '#FFFFFF',
   accent: '#323A47',
-  positive: '#2E9E6B',
-  negative: '#D1495B',
-  focusRing: '#3B6FE0',
-  gradientStart: '#C0CEFF',
-  gradientEnd: '#F4D9D0',
-  skeleton: '#EDF1F5',
+  peach: '#F28C5B',
+  link: '#A8461F',
+  positive: '#237A53',
+  negative: '#B83A4B',
+  bannerStart: '#FFD3BA',
+  bannerEnd: '#FDEBDD',
+  skeleton: '#F2EDE8',
 };
 
 export const spacing = {

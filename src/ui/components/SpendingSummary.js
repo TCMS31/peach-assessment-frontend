@@ -7,6 +7,14 @@ import { EmptyState } from './StateView';
 import { formatCurrency, formatPercentage } from '../../domain/money';
 import { colors, spacing, typography } from '../theme';
 
+/** The ring itself is only colour, so screen readers get the numbers as a sentence. */
+export function describeChart(categories, total) {
+  const parts = categories.map(
+    (category) => `${category.name} ${formatPercentage(category.share)}`,
+  );
+  return `Spending by category, ${formatCurrency(total)} in total: ${parts.join(', ')}`;
+}
+
 export default function SpendingSummary({ categories, total }) {
   if (categories.length === 0) {
     return (
@@ -39,7 +47,7 @@ export default function SpendingSummary({ categories, total }) {
 
         <View style={styles.chartColumn}>
           <View style={styles.chartStack}>
-            <DonutChart slices={categories} />
+            <DonutChart slices={categories} accessibilityLabel={describeChart(categories, total)} />
             <View style={styles.chartCenter} pointerEvents="none">
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue} testID="spending-total">

@@ -8,7 +8,7 @@ import Screen from '../../ui/components/Screen';
 import SpendingSummary from '../../ui/components/SpendingSummary';
 import { ErrorState, LoadingState } from '../../ui/components/StateView';
 import TransactionList from '../../ui/components/TransactionList';
-import { spacing, typography } from '../../ui/theme';
+import { colors, radii, spacing, typography } from '../../ui/theme';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -50,6 +50,11 @@ export default function HomeScreen() {
 
   const header = (
     <View style={styles.header}>
+      {dashboard.error ? (
+        <Text accessibilityRole="alert" style={styles.notice} testID="refresh-error">
+          Could not refresh: {dashboard.error}. Showing the last data received.
+        </Text>
+      ) : null}
       <SpendingSummary categories={dashboard.topCategories} total={dashboard.totalSpend} />
       <ReviewBanner count={dashboard.pendingTransactions.length} onPress={openQueue} />
       <Text style={styles.sectionTitle}>Recent transactions</Text>
@@ -78,5 +83,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.sectionTitle,
+  },
+  notice: {
+    ...typography.caption,
+    color: colors.negative,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
   },
 });

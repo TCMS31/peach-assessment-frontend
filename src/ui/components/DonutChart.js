@@ -18,7 +18,13 @@ const FULL_CIRCLE = Math.PI * 2;
  * are native-only, and on react-native-web they emit a bare `rotate(-90)` that
  * spins the chart about the origin and off the canvas.
  */
-export default function DonutChart({ slices, size = 176, thickness = 22, testID = 'donut-chart' }) {
+export default function DonutChart({
+  slices,
+  size = 176,
+  thickness = 22,
+  accessibilityLabel,
+  testID = 'donut-chart',
+}) {
   const radius = (size - thickness) / 2;
   const circumference = FULL_CIRCLE * radius;
   const quarterTurn = circumference / 4;
@@ -41,7 +47,12 @@ export default function DonutChart({ slices, size = 176, thickness = 22, testID 
   }, [slices, circumference, quarterTurn]);
 
   return (
-    <View accessible accessibilityRole="image" testID={testID}>
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+    >
       <Svg width={size} height={size}>
         <Circle
           cx={size / 2}
