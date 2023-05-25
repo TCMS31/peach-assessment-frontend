@@ -18,9 +18,9 @@ const screenOptions = {
 };
 
 /**
- * `SafeAreaProvider` supplies the insets; the previous version also wrapped
- * everything in a bare `SafeAreaView`, which double-padded the top on iOS and
- * on Android applied no inset at all.
+ * `SafeAreaProvider` supplies the insets and the native-stack header consumes
+ * them. Wrapping this in a `SafeAreaView` as well would double-pad the top on
+ * iOS.
  */
 export default function RootNavigator() {
   return (

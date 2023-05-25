@@ -8,8 +8,7 @@ import { spacing } from '../theme';
 const ROW_STRIDE = ROW_HEIGHT + spacing.sm;
 
 /**
- * A windowed list. The original screen rendered a single hardcoded row inside a
- * fixed-height `View`; a real ledger is unbounded, so it has to be virtualised.
+ * A windowed list: a real ledger is unbounded, so it has to be virtualised.
  * `getItemLayout` is supplied because every row is a fixed height, which lets
  * FlatList skip measurement entirely and scroll without layout jank.
  */

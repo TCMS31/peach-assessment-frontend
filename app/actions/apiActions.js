@@ -3,23 +3,15 @@ import Reflux from 'reflux';
 import { peachApi } from '../../src/api/peachApi';
 
 /**
- * Reflux action layer.
+ * Reflux action layer: dispatch, await, and report success or failure. The
+ * transport lives in `src/api`.
  *
- * The take-home skeleton put `fetch` calls straight in here with a hardcoded
- * URL. The transport now lives in `src/api`, so this file only does what an
- * action layer should: dispatch, await, and report success or failure.
- *
- * `configureApi` exists so tests (and a future offline/demo mode) can swap the
- * client without monkey-patching global fetch.
+ * `configureApi` lets tests swap the client without monkey-patching fetch.
  */
 let client = peachApi;
 
 export function configureApi(nextClient) {
   client = nextClient ?? peachApi;
-}
-
-export function currentApi() {
-  return client;
 }
 
 const apiActions = Reflux.createActions({

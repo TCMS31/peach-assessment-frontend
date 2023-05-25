@@ -7,9 +7,8 @@ import apiActions from '../actions/apiActions';
 export const STORAGE_KEY = 'peach.apiData.v2';
 
 /**
- * Writes are batched behind this delay. The original store called
- * `AsyncStorage.setItem(JSON.stringify(everything))` on every single trigger,
- * which serialises the whole ledger on the JS thread each time a slice lands.
+ * Writes are batched behind this delay. Persisting on every trigger would
+ * serialise the whole ledger on the JS thread each time a slice lands.
  */
 export const PERSIST_DEBOUNCE_MS = 400;
 
@@ -69,9 +68,8 @@ const apiStore = Reflux.createStore({
     this.state = initialState();
     this.persistTimer = null;
 
-    // Registered synchronously. The original registered these inside an
-    // AsyncStorage callback, so any response that arrived before the disk read
-    // finished - or at all, if the read errored - was dropped on the floor.
+    // Registered synchronously, before the cache read starts, so a response
+    // that lands before the disk read finishes (or after it fails) is kept.
     for (const slice of SLICES) {
       const action = apiActions[actionNameFor(slice)];
       this.listenTo(action, () => this.markLoading(slice));

@@ -13,8 +13,8 @@ import { colors, radii, spacing, typography } from '../../ui/theme';
 
 /**
  * Review one transaction: confirm or change its category, then mark it
- * reviewed. Presented as a modal to match the original design intent, but as a
- * real route rather than a `<Modal>` duplicated into two screens.
+ * reviewed. Presented as a modal route rather than a `<Modal>` so the category
+ * picker can stack on top of it.
  */
 export default function ReviewTransactionScreen() {
   const navigation = useNavigation();

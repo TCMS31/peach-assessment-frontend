@@ -4,10 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, MIN_TOUCH_TARGET, radii, spacing, typography } from '../theme';
 
-/**
- * Call to action for the review queue. The count is derived from the data; the
- * original hardcoded "10 New Transactions to Review" regardless of the backend.
- */
+/** Call to action for the review queue; the count is derived from the data. */
 export default function ReviewBanner({ count, onPress }) {
   const plural = count === 1 ? 'transaction' : 'transactions';
   const label = count === 0 ? 'All transactions reviewed' : `${count} new ${plural} to review`;

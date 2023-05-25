@@ -71,8 +71,7 @@ export function pendingReview(transactions) {
 
 /**
  * Totals spend per category, largest first. `share` is a 0..1 fraction of the
- * overall spend, so the slices of the donut always add up to exactly 100% -
- * the original hardcoded chart used 35% + 55% and lost 10% of the circle.
+ * overall spend, so the slices of the donut always add up to exactly 100%.
  */
 export function categoryTotals(transactions) {
   const buckets = new Map();

@@ -10,9 +10,8 @@ import { EmptyState, ErrorState, LoadingState } from '../../ui/components/StateV
 import { colors, MIN_TOUCH_TARGET, radii, spacing, typography } from '../../ui/theme';
 
 /**
- * Category grid, driven entirely by GET /categories. The original screen
- * hardcoded six tiles, five of which only wrote a debug string to the console,
- * and used a label ("Subscription") the backend does not have.
+ * Category grid, driven entirely by GET /categories, so a category added on
+ * the backend appears here with no frontend change.
  */
 export default function CategoryPickerScreen() {
   const navigation = useNavigation();
