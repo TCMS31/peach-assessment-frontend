@@ -29,7 +29,7 @@ module.exports = {
       env: { jest: true },
     },
     {
-      files: ['*.config.js', '.eslintrc.js', 'jest.setup.js'],
+      files: ['*.config.js', '.eslintrc.js', 'jest.setup.js', 'scripts/**/*.js'],
       env: { node: true },
     },
   ],
