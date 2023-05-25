@@ -28,9 +28,8 @@ export function useApiState() {
 }
 
 /**
- * Fires the initial loads exactly once per mount. The original effect returned
- * `() => unsubscribe` - a function returning the unsubscribe function rather
- * than calling it - so the listener was never removed.
+ * Fires the initial loads once per mount. The ref guard keeps React's
+ * development double-invoke of effects from sending every request twice.
  */
 export function useBootstrap() {
   const started = useRef(false);
@@ -52,19 +51,31 @@ export function refresh() {
   apiActions.getTransactions();
 }
 
+/** A slice that has been answered before keeps showing its data while it reloads. */
+function hasAnswer(slice) {
+  return slice.updatedAt !== null || slice.data.length > 0;
+}
+
 /**
- * Collapses the three slices into one status for a whole-screen state machine.
- * Errors only surface when there is nothing cached to show instead.
+ * Collapses several slices into one status for a whole-screen state machine.
+ * Errors only surface when there is nothing to show instead, and a refresh of
+ * data already on screen stays 'ready' so a pull-to-refresh never blanks it.
  */
 export function combineStatus(slices) {
   if (slices.some((slice) => slice.status === 'error')) {
     return 'error';
   }
-  if (slices.every((slice) => slice.status === 'ready')) {
+  if (slices.every((slice) => slice.status === 'ready' || hasAnswer(slice))) {
     return 'ready';
   }
   return 'loading';
 }
+
+export function isRefreshing(slices) {
+  return combineStatus(slices) === 'ready' && slices.some((slice) => slice.status === 'loading');
+}
+
+export const RECENT_TRANSACTION_LIMIT = 20;
 
 export function useDashboard() {
   const state = useApiState();
@@ -72,8 +83,10 @@ export function useDashboard() {
   return useMemo(() => {
     const transactions = state.transactions.data;
     const sorted = sortByDateDescending(transactions);
+    const slices = [state.transactions, state.categories];
     return {
-      status: combineStatus([state.transactions, state.categories]),
+      status: combineStatus(slices),
+      isRefreshing: isRefreshing(slices),
       error: state.transactions.error ?? state.categories.error,
       transactions: sorted,
       recentTransactions: sorted.slice(0, RECENT_TRANSACTION_LIMIT),
@@ -86,13 +99,11 @@ export function useDashboard() {
   }, [state]);
 }
 
-export const RECENT_TRANSACTION_LIMIT = 20;
-
 export function useCategories() {
   const state = useApiState();
   return useMemo(
     () => ({
-      status: state.categories.status,
+      status: combineStatus([state.categories]),
       error: state.categories.error,
       categories: state.categories.data,
     }),

@@ -64,7 +64,7 @@ export default function HomeScreen() {
         ListHeaderComponent={header}
         emptyTitle="No transactions yet"
         emptyBody="Seed the backend with `bundle exec rake db:seed` to see data here."
-        refreshControl={<RefreshControl refreshing={false} onRefresh={refresh} />}
+        refreshControl={<RefreshControl refreshing={dashboard.isRefreshing} onRefresh={refresh} />}
       />
     </Screen>
   );

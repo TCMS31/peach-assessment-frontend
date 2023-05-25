@@ -5,6 +5,7 @@ import apiActions, { configureApi } from '../../../app/actions/apiActions';
 import apiStore from '../../../app/stores/apiStore';
 import { createHttpClient } from '../../api/httpClient';
 import { createPeachApi } from '../../api/peachApi';
+import { combineStatus, refresh } from '../../state/apiState';
 import {
   categoriesPayload,
   createFetchStub,
@@ -188,5 +189,37 @@ describe('review flow', () => {
       transaction: { category_attributes: { name: 'Food and Drink', emoji: '🍕' } },
     });
     await waitFor(() => expect(mockNavigation.goBack).toHaveBeenCalled());
+  });
+
+  it('keeps the dashboard on screen while a pull-to-refresh is in flight', async () => {
+    stubNetwork();
+    await loadStore();
+    render(<HomeScreen />);
+
+    const never = () => new Promise(() => {});
+    configureApi({ getCategories: never, getMerchants: never, getTransactions: never });
+    await act(async () => {
+      refresh();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(screen.queryByTestId('state-loading')).toBeNull();
+    expect(screen.getByTestId('spending-total')).toHaveTextContent('$256.36');
+    expect(apiStore.getCurrentState().transactions.status).toBe('loading');
+  });
+});
+
+describe('combineStatus', () => {
+  const slice = (status, data = [], updatedAt = null) => ({ status, data, error: null, updatedAt });
+
+  it.each([
+    ['nothing requested yet', [slice('idle')], 'loading'],
+    ['first load in flight', [slice('loading')], 'loading'],
+    ['all answered', [slice('ready', [1], 1), slice('ready', [], 1)], 'ready'],
+    ['reloading answered data', [slice('loading', [1], 1)], 'ready'],
+    ['reloading an answered empty list', [slice('loading', [], 1)], 'ready'],
+    ['one slice failed with nothing to show', [slice('ready', [1], 1), slice('error')], 'error'],
+  ])('%s -> %s', (_label, slices, expected) => {
+    expect(combineStatus(slices)).toBe(expected);
   });
 });
