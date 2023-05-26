@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "peach-take-home-front-end",
+    "slug": "peach-take-home-front-end",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "peach-take-home-front-end"
+}
