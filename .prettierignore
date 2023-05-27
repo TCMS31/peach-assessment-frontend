@@ -1,0 +1,8 @@
+node_modules/
+android/
+ios/
+web-build/
+dist/
+coverage/
+docs/screenshots/
+yarn.lock
