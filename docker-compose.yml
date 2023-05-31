@@ -1,0 +1,37 @@
+# Brings up the web build of the client alongside the stub API, so the whole
+# flow can be exercised without Ruby and Postgres. Point PEACH_API_URL at the
+# real peach-take-home-back-end instead when you have one running.
+services:
+  api:
+    image: node:18-bookworm-slim
+    working_dir: /app
+    command: ["node", "scripts/mock-api.js", "--port", "3000"]
+    volumes:
+      - ./scripts:/app/scripts:ro
+    ports:
+      - "8861:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/categories').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  web:
+    build:
+      context: .
+      args:
+        # Baked into the static bundle at build time; must be reachable from
+        # the browser, which is why it is the published host port.
+        PEACH_API_URL: "http://localhost:8861"
+    ports:
+      - "8860:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
