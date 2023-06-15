@@ -20,7 +20,7 @@ apiActions.getCategories.listen(() => {
       console.log('apiActions.getCategories - success!');
     })
     .catch(error => {
-      rollbarError('apiActions.getCategories - error! ', error);
+      console.log('apiActions.getCategories - error! ', error);
       apiActions.getCategories.completed({
         data: error,
         loadFail: true,
@@ -40,7 +40,7 @@ apiActions.getMerchants.listen(() => {
       console.log('apiActions.getMerchants - success!');
     })
     .catch(error => {
-      rollbarError('apiActions.getMerchants - error! ', error);
+      console.log('apiActions.getMerchants - error! ', error);
       apiActions.getMerchants.completed({
         data: error,
         loadFail: true,
