@@ -1,4 +1,4 @@
-# peach-take-home-back-end
+# peach-take-home-front-end
 
 ### Setup for development
 
@@ -8,9 +8,10 @@ brew install yarn node@16 watchman
 yarn install
 ```
 
-### Running locally
+Note: Set up your Backend URL in apiActions.js!
+
+### Running locally -- choose whichever is easiest.
 ```
 yarn ios
 yarn android
-yarn web
 ```

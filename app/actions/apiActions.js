@@ -30,6 +30,7 @@ apiActions.getCategories.listen(() => {
 
 apiActions.getMerchants.listen(() => {
   const reqUrl = `${BASE_URL}/merchants`;
+
   fetch(reqUrl)
     .then(data => data.json())
     .then(data => {
