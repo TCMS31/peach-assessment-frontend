@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import apiActions from './app/actions/apiActions';
 import apiStore from './app/stores/apiStore';
+import RootNavigator from './src/screens/RootNavigator';
 
 export default function App() {
   useEffect(() => {
@@ -36,13 +37,7 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <Text>TODO: Render static nav bar</Text>
-      <Text>TODO: Render Categories Pie Chart</Text>
-      <Text>TODO: Render Reivew Transactions CTA</Text>
-      <Text>TODO: Render Transactions List</Text>
-    </View>
+   <RootNavigator/>
   );
 }
 
